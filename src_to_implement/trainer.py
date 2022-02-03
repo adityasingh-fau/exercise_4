@@ -20,6 +20,11 @@ class Trainer:
         self._val_test_dl = val_test_dl
         self._cuda = cuda
 
+        self.targetCracks = []
+        self.targetInactive = []
+        self.outCracks = []
+        self.outInactive = []
+
         self._early_stopping_patience = early_stopping_patience
 
         if cuda:
@@ -95,6 +100,7 @@ class Trainer:
         self._model.eval()
         predictions = []
         storedLabels = []
+        batchLen = len(self._val_test_dl)
         # disable gradient computation. Since you don't need to update the weights during testing, gradients aren't required anymore.
         with t.no_grad():
             # iterate through the validation set
@@ -111,16 +117,36 @@ class Trainer:
                 loss, prediction = self.val_test_step(inputs, labels)
                 running_loss += loss
                 # save the predictions and the labels for each batch
-                predictions.extend(prediction)
-                storedLabels.extend(labels)
+                predictions.append(prediction)
+                storedLabels.append(labels)
 
         # calculate the average loss and average metrics of your choice. You might want to calculate these metrics in designated functions
-        avg_loss = running_loss / total_data
+        avg_loss = running_loss / batchLen
         # print(storedLabels)
         # f1score = f1_score(storedLabels, predictions, average=None)
         # print(f1score)
 
         # return the loss and print the calculated metrics
+        self.crackF1score = []
+        self.inactiveF1score = []
+
+        for i in range(batchLen):
+            predictValue = ((predictions[i]>0.5).cpu() * t.tensor([1]))
+            labelValue = ((storedLabels[i]).cpu() * t.tensor([1]))
+            predictCrackValue = predictValue[:,0]
+            predictInactiveValue = predictValue[:,1]
+            labelCrackValue = labelValue[:,0]
+            labelInactiveValue = labelValue[:,1]
+            self.targetCracks += labelCrackValue.tolist()
+            self.targetInactive += labelInactiveValue.tolist()
+            self.outCracks += predictCrackValue.tolist()
+            self.outInactive += predictInactiveValue.tolist()
+
+            avgMethod = "None" #Manipulate
+            crackF1Score = f1_score(labelCrackValue,predictCrackValue, average= avgMethod)
+            inactiveF1Score = f1_score(labelInactiveValue,predictInactiveValue,average = avgMethod)
+            self.crackF1score.append(crackF1Score)
+            self.inactiveF1score.append(inactiveF1Score)
         return avg_loss
 
     def fit(self, epochs=-1):
@@ -139,6 +165,14 @@ class Trainer:
             trainloss = self.train_epoch()
             valloss = self.val_test()
 
+            self.crackF1scoreFit = []
+            self.inactiveF1scoreFit = []
+            avgMethod = "None"  # Manipulate
+            crackF1Score = f1_score(self.targetCracks, self.outCracks, average=avgMethod)
+            inactiveF1Score = f1_score(self.targetInactive, self.outInactive, average=avgMethod)
+            self.crackF1scoreFit.append(crackF1Score)
+            self.inactiveF1scoreFit.append(inactiveF1Score)
+
             # append the losses to the respective lists
             train_Loss.append(trainloss)
             val_Loss.append(valloss)
@@ -150,3 +184,19 @@ class Trainer:
             # return the losses for both training and validation
             epoch += 1
         return train_Loss, val_Loss
+
+    def f1_scores(self):
+        f1scoreCrack = np.array(self.crackF1score)
+        f1scoreInactive = np.array(self.inactiveF1score)
+        meanF1crack = np.mean(f1scoreCrack)
+        meanF1inactive = np.mean(f1scoreInactive)
+        meanF1 = np.mean((meanF1crack, meanF1inactive))
+        return meanF1, meanF1crack, meanF1inactive
+
+    def f1_scoresFit(self):
+        f1scoreCrack = np.array(self.crackF1scoreFit)
+        f1scoreInactive = np.array(self.inactiveF1scoreFit)
+        meanF1crack = np.mean(f1scoreCrack)
+        meanF1inactive = np.mean(f1scoreInactive)
+        meanF1 = np.mean((meanF1crack, meanF1inactive))
+        return meanF1, meanF1crack, meanF1inactive
