@@ -1,3 +1,4 @@
+import numpy as np
 import torch as t
 from sklearn.metrics import f1_score
 from tqdm.autonotebook import tqdm
@@ -55,8 +56,9 @@ class Trainer:
                                     'output': {0: 'batch_size'}})
 
     def train_step(self, x, y):
-        # perform following steps:
-        # -reset the gradients. By default, PyTorch accumulates (sums up) gradients when backward() is called. This behavior is not required here, so you need to ensure that all the gradients are zero before calling the backward.
+        # perform following steps: -reset the gradients. By default, PyTorch accumulates (sums up) gradients when
+        # backward() is called. This behavior is not required here, so you need to ensure that all the gradients are
+        # zero before calling the backward.
         self._optim.zero_grad()
         # -propagate through the network
         prop = self._model(x)
@@ -83,7 +85,7 @@ class Trainer:
         # iterate through the training set.
         loss = 0.0
         total_data = 0
-        for i, data in enumerate(self._train_dl, 0):
+        for i, data in tqdm(enumerate(self._train_dl, 0)):
             inputs, labels = data
             total_data = len(data)
             # transfer the batch to "cuda()" -> the gpu if a gpu is given
@@ -96,17 +98,19 @@ class Trainer:
         return loss / total_data
 
     def val_test(self):
-        # set eval mode. Some layers have different behaviors during training and testing (for example: Dropout, BatchNorm, etc.). To handle those properly, you'd want to call model.eval()
+        # set eval mode. Some layers have different behaviors during training and testing (for example: Dropout,
+        # BatchNorm, etc.). To handle those properly, you'd want to call model.eval()
         self._model.eval()
         predictions = []
         storedLabels = []
         batchLen = len(self._val_test_dl)
-        # disable gradient computation. Since you don't need to update the weights during testing, gradients aren't required anymore.
+        # disable gradient computation. Since you don't need to update the weights during testing, gradients aren't
+        # required anymore.
         with t.no_grad():
             # iterate through the validation set
             running_loss = 0.0
             total_data = 0
-            for i, data in enumerate(self._val_test_dl, 0):
+            for i, data in tqdm(enumerate(self._val_test_dl, 0)):
                 inputs, labels = data
                 total_data += len(data)
                 # transfer the batch to the gpu if given
@@ -142,11 +146,13 @@ class Trainer:
             self.outCracks += predictCrackValue.tolist()
             self.outInactive += predictInactiveValue.tolist()
 
-            avgMethod = "None" #Manipulate
+            avgMethod = 'macro'  #Manipulate
             crackF1Score = f1_score(labelCrackValue,predictCrackValue, average= avgMethod)
             inactiveF1Score = f1_score(labelInactiveValue,predictInactiveValue,average = avgMethod)
             self.crackF1score.append(crackF1Score)
             self.inactiveF1score.append(inactiveF1Score)
+        # f1_mean, f1_cracks_mean, f1_inactives_mean = self.f1_scores()
+        # print("Test: F1 Crack {} F1 Inactive {} F1 Mean {}".format(f1_cracks_mean, f1_inactives_mean, f1_mean))
         return avg_loss
 
     def fit(self, epochs=-1):
@@ -167,12 +173,13 @@ class Trainer:
 
             self.crackF1scoreFit = []
             self.inactiveF1scoreFit = []
-            avgMethod = "None"  # Manipulate
+            avgMethod = 'macro'  # Manipulate
             crackF1Score = f1_score(self.targetCracks, self.outCracks, average=avgMethod)
             inactiveF1Score = f1_score(self.targetInactive, self.outInactive, average=avgMethod)
             self.crackF1scoreFit.append(crackF1Score)
             self.inactiveF1scoreFit.append(inactiveF1Score)
-
+            # f1_mean_fit, f1_crack_fit, f1_inactive_fit = self.f1_scoresFit()
+            # print("Fit:  F1 Crack {} F1 Inactive {} F1 Mean {}".format(f1_mean_fit, f1_inactive_fit, f1_mean_fit))
             # append the losses to the respective lists
             train_Loss.append(trainloss)
             val_Loss.append(valloss)

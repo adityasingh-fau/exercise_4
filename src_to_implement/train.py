@@ -21,18 +21,18 @@ testing_data_load = t.utils.data.DataLoader(ChallengeDataset(training_data, 'tes
 model = model.ResNet()
 # set up a suitable loss criterion (you can find a pre-implemented loss functions in t.nn)
 lossfunc = t.nn.BCEWithLogitsLoss()
-#lossfunc = t.nn.HuberLoss()
+# lossfunc = t.nn.HuberLoss()
 # set up the optimizer (see t.optim)
-opt = t.optim.Adam(model.parameters(), lr=0.01)
+opt = t.optim.Adam(model.parameters(), lr=0.001, weight_decay=0, betas=(0.9, 0.999), amsgrad=False, eps=1e-10)
 # create an object of type Trainer and set its early stopping criterion
 model_trainer = Trainer(model, lossfunc, opt, train_data_loading, testing_data_load, True, 1e-6)
 # go, go, go... call fit on trainer
 res = model_trainer.fit(epochs=30)
-f1_mean, f1_cracks_mean, f1_inactives_mean = trainer.f1_scores()
-f1_mean_fit, f1_crack_fit, f1_inactive_fit = trainer.f1_scoresFit()
+f1_mean, f1_cracks_mean, f1_inactives_mean = model_trainer.f1_scores()
+f1_mean_fit, f1_crack_fit, f1_inactive_fit = model_trainer.f1_scoresFit()
 
 print("Test: F1 Crack {} F1 Inactive {} F1 Mean {}".format(f1_cracks_mean, f1_inactives_mean, f1_mean))
-print("Fit:  F1 Crack {} F1 Inactive {} F1 Mean {}".format(f1_cracks_mean, f1_inactive_fit, f1_mean_fit))
+print("Fit:  F1 Crack {} F1 Inactive {} F1 Mean {}".format(f1_mean_fit, f1_inactive_fit, f1_mean_fit))
 
 # plot the results
 plt.plot(np.arange(len(res[0])), res[0], label='train loss')

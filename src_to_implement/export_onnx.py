@@ -5,7 +5,7 @@ from trainer import Trainer
 import sys
 import torchvision as tv
 
-epoch = 28 #int(sys.argv[1])
+epoch = 30 #int(sys.argv[1])
 model = ResNet()
 
 crit = t.nn.BCELoss()
