@@ -11,7 +11,6 @@ train_std = [0.16043035, 0.16043035, 0.16043035]
 
 
 class ChallengeDataset(Dataset):
-    # TODO implement the Dataset class according to the description
     def __init__(self, data, mode):
         super(ChallengeDataset, self).__init__()
         self.data = data
@@ -41,4 +40,4 @@ class ChallengeDataset(Dataset):
         defect = np.array(data[index, 1:], dtype=float)
         #defect = (np.array(defect)).reshape(-1, 1)  # reshape to (L,1) array where L is no. of type of defects
 
-        return self._transform(image), torch.tensor(defect)
+        return self._transform(image), torch.tensor(defect).float()

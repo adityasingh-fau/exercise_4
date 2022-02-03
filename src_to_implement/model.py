@@ -35,7 +35,6 @@ class ResNet(nn.Module):
         self.Conv2D = nn.Conv2d(in_channels=3, out_channels=64, kernel_size=7, stride=2)
         self.BatchNorm = nn.BatchNorm2d(64)
         self.Relu = nn.ReLU()
-        #self.maxpool= nn.MaxPool2d(kernel_size=3, stride=2)
         self.seq = nn.Sequential(
             nn.MaxPool2d(kernel_size=3, stride=2),
             ResBlock(64, 64, 1),
