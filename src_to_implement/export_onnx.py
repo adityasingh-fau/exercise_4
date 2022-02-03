@@ -1,10 +1,12 @@
 import torch as t
+
+from model import ResNet
 from trainer import Trainer
 import sys
 import torchvision as tv
 
-epoch = int(sys.argv[1])
-#TODO: Enter your model here
+epoch = 28 #int(sys.argv[1])
+model = ResNet()
 
 crit = t.nn.BCELoss()
 trainer = Trainer(model, crit)

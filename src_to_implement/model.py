@@ -1,11 +1,39 @@
 from torch import nn
 
 
+class ResBlock(nn.Module):
+    def __init__(self, in_channels, out_channels, stride):
+        super(ResBlock, self).__init__()
+
+        self.seq1 = nn.Sequential(
+            nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1, stride=stride),
+            nn.BatchNorm2d(out_channels),
+            nn.ReLU()
+        )
+        self.seq2 = nn.Sequential(
+            nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1),
+            nn.BatchNorm2d(out_channels),
+        )
+        self.Relu = nn.ReLU()
+
+        self.SkipConnection = nn.Sequential(
+            nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=stride),
+            nn.BatchNorm2d(out_channels),
+        )
+
+    def forward(self, input):
+        out = self.seq1(input)
+        out = self.seq2(out)
+        out += self.SkipConnection(input)
+        out = self.Relu(out)
+        return out
+
+
 class ResNet(nn.Module):
     def __init__(self):
-        super(self, ResNet).__init__()
+        super(ResNet, self).__init__()
         self.Conv2D = nn.Conv2d(in_channels=3, out_channels=64, kernel_size=7, stride=2)
-        self.BatchNorm = nn.BatchNorm2d()
+        self.BatchNorm = nn.BatchNorm2d(64)
         self.Relu = nn.ReLU()
         self.seq = nn.Sequential(
             nn.MaxPool2d(kernel_size=3, stride=2),
@@ -25,30 +53,3 @@ class ResNet(nn.Module):
         output = self.Relu(output)
         output = self.seq(output)
         return output
-
-
-class ResBlock:
-    def __init__(self, in_channels, out_channels, stride):
-        super(self, ResBlock).__init__()
-
-        self.seq1 = nn.sequential(
-            nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=stride),
-            nn.BatchNorm2d(),
-            nn.ReLU()
-        )
-        self.seq2 = nn.sequential(
-            nn.Conv2d(in_channels, out_channels, kernel_size=3),
-            nn.BatchNorm2d(),
-        )
-
-        self.SkipConnection = nn.sequential(
-            nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=stride),
-            nn.BatchNorm2d(),
-        )
-
-    def forward(self, input):
-        out = self.seq1(input)
-        out = self.seq2(out)
-        out += self.SkipConnection(input)
-        out = nn.ReLU(out)
-        return out

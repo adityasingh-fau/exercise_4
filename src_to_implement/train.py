@@ -20,8 +20,8 @@ testing_data_load = t.utils.data.DataLoader(ChallengeDataset(training_data, 'tes
 # create an instance of our ResNet model
 model = model.ResNet()
 # set up a suitable loss criterion (you can find a pre-implemented loss functions in t.nn)
-# lossfunc = t.nn.BCEWithLogitsLoss()
-lossfunc = t.nn.HuberLoss()
+lossfunc = t.nn.BCEWithLogitsLoss()
+#lossfunc = t.nn.HuberLoss()
 # set up the optimizer (see t.optim)
 opt = t.optim.Adam(model.parameters(), lr=0.01)
 # create an object of type Trainer and set its early stopping criterion
