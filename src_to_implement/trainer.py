@@ -100,6 +100,7 @@ class Trainer:
     def val_test(self):
         # set eval mode. Some layers have different behaviors during training and testing (for example: Dropout,
         # BatchNorm, etc.). To handle those properly, you'd want to call model.eval()
+        losses = Metric('Loss',':.4e')
         self._model.eval()
         predictions = []
         storedLabels = []
@@ -119,7 +120,7 @@ class Trainer:
                     labels = labels.cuda()
                 # perform a validation step
                 loss, prediction = self.val_test_step(inputs, labels)
-                running_loss += loss
+                losses.update(loss, batchLen)
                 # save the predictions and the labels for each batch
                 predictions.append(prediction)
                 storedLabels.append(labels)
@@ -151,6 +152,7 @@ class Trainer:
             inactiveF1Score = f1_score(labelInactiveValue,predictInactiveValue,average = avgMethod)
             self.crackF1score.append(crackF1Score)
             self.inactiveF1score.append(inactiveF1Score)
+        avg_loss = losses.average()
         # f1_mean, f1_cracks_mean, f1_inactives_mean = self.f1_scores()
         # print("Test: F1 Crack {} F1 Inactive {} F1 Mean {}".format(f1_cracks_mean, f1_inactives_mean, f1_mean))
         return avg_loss
@@ -207,3 +209,26 @@ class Trainer:
         meanF1inactive = np.mean(f1scoreInactive)
         meanF1 = np.mean((meanF1crack, meanF1inactive))
         return meanF1, meanF1crack, meanF1inactive
+
+    class Metrics:
+
+        def __init__(self, name, fmt=':f'):
+            self.name = name
+            self.fmt = fmt
+            self.val = 0
+            self.avg = 0
+            self.sum = 0
+            self.count = 0
+
+        def __str__(self):
+            fmtstr = '{name} {val' + self.fmt + '} ({avg' + self.fmt + '})'
+            return fmtstr.format(**self.__dict__)
+
+        def update(self, val, n=1):
+            self.val = val
+            self.sum += val * n
+            self.count += n
+            self.avg = self.sum / self.count
+
+        def average(self):
+            return self.avg
